@@ -1,3 +1,16 @@
+import React from 'react';
+import Counter from './components/Counter'; // Import the Counter component
+
+function App() {
+  return (
+    <div>
+      <h1>Simple Counter Application</h1>
+      <Counter /> {/* Include the Counter component */}
+    </div>
+  );
+}
+
+export default App;
 import UserProfile from './components/UserProfile';
 function App() {
     return (
