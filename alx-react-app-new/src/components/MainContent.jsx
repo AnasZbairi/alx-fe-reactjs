@@ -3,7 +3,7 @@ function MainContent() {
     <main style={{ padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '5px', margin: '10px' }}>
       <h2 style={{ color: 'darkorange' }}>Welcome to My App!</h2>
       <p style={{ fontSize: '16px', lineHeight: '1.6' }}>
-        This is the main content area. You can add more details here.
+        I love to visit New York, Paris, and Tokyo.
       </p>
     </main>
   );
