@@ -1,15 +1,21 @@
-import React from 'react';
-import RecipeList from './components/RecipeList';
-import AddRecipeForm from './components/AddRecipeForm';
+import { Link } from 'react-router-dom';
+import useRecipeStore from '../recipeStore';
 
-const App = () => {
+const RecipeList = () => {
+  const recipes = useRecipeStore((state) => state.recipes);
+
   return (
     <div>
-      <h1>Recipe Sharing App</h1>
-      <AddRecipeForm />
-      <RecipeList />
+      {recipes.map((recipe) => (
+        <div key={recipe.id}>
+          <h3>
+            <Link to={`/recipes/${recipe.id}`}>{recipe.title}</Link>
+          </h3>
+          <p>{recipe.description}</p>
+        </div>
+      ))}
     </div>
   );
 };
 
-export default App;
+export default RecipeList;
