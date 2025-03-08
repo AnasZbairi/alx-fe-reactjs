@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth(); // Use the useAuth hook
 
   const handleLogin = () => {
-    localStorage.setItem('isAuthenticated', 'true'); // Simulate login
+    login(); // Simulate login
     navigate('/profile');
   };
 
