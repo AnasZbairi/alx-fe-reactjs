@@ -29,7 +29,7 @@ const RegistrationForm = () => {
         <input
           type="text"
           name="username"
-          value={formData.username} // Added value attribute
+          value={formData.username} // This is the value attribute
           onChange={handleChange}
         />
       </div>
@@ -38,7 +38,7 @@ const RegistrationForm = () => {
         <input
           type="email"
           name="email"
-          value={formData.email} // Added value attribute
+          value={formData.email} // This is the value attribute
           onChange={handleChange}
         />
       </div>
@@ -47,7 +47,7 @@ const RegistrationForm = () => {
         <input
           type="password"
           name="password"
-          value={formData.password} // Added value attribute
+          value={formData.password} // This is the value attribute
           onChange={handleChange}
         />
       </div>
