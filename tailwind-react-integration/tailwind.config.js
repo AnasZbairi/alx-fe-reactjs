@@ -1,5 +1,6 @@
 module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}", "./index.html"], // Replaces `purge`
+  content: ["./src/**/*.{js,jsx,ts,tsx}", "./index.html"],
+  darkMode: "class", // or 'media'
   theme: {
     extend: {},
   },
