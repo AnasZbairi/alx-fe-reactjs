@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 const AddRecipeForm = () => {
   const [title, setTitle] = useState('');
   const [ingredients, setIngredients] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [steps, setSteps] = useState(''); // State for preparation steps
   const [errors, setErrors] = useState({}); // State to track validation errors
 
   // Validation function
@@ -16,8 +16,8 @@ const AddRecipeForm = () => {
     if (!ingredients.trim()) {
       newErrors.ingredients = 'Ingredients are required';
     }
-    if (!instructions.trim()) {
-      newErrors.instructions = 'Instructions are required';
+    if (!steps.trim()) {
+      newErrors.steps = 'Preparation steps are required';
     }
 
     setErrors(newErrors);
@@ -29,12 +29,12 @@ const AddRecipeForm = () => {
 
     if (validate()) {
       // If validation passes, handle form submission
-      console.log({ title, ingredients, instructions });
+      console.log({ title, ingredients, steps });
       alert('Recipe submitted successfully!');
       // Clear form fields
       setTitle('');
       setIngredients('');
-      setInstructions('');
+      setSteps('');
       setErrors({});
     }
   };
@@ -66,15 +66,15 @@ const AddRecipeForm = () => {
           {errors.ingredients && <p className="text-red-500 text-sm mt-1">{errors.ingredients}</p>}
         </div>
 
-        {/* Instructions Field */}
+        {/* Steps Field */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Preparation Steps</label>
           <textarea
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
+            value={steps}
+            onChange={(e) => setSteps(e.target.value)}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
           />
-          {errors.instructions && <p className="text-red-500 text-sm mt-1">{errors.instructions}</p>}
+          {errors.steps && <p className="text-red-500 text-sm mt-1">{errors.steps}</p>}
         </div>
 
         {/* Submit Button */}
