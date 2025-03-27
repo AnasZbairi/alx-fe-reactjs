@@ -1,15 +1,16 @@
 import axios from 'axios';
 
-// Base URL for GitHub API from environment variables
-const API_URL = import.meta.env.VITE_APP_GITHUB_API_URL;
+// GitHub API configuration
+const GITHUB_API_URL = 'https://api.github.com';
 
-// Create axios instance with common configuration
+// Create axios instance with GitHub API configuration
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: GITHUB_API_URL,
   headers: {
-    'Accept': 'application/vnd.github.v3+json'
+    'Accept': 'application/vnd.github.v3+json',
+    'Authorization': '' // Add token here if needed for higher rate limits
   },
-  timeout: 10000 // 10 seconds timeout
+  timeout: 8000 // 8 seconds timeout
 });
 
 /**
@@ -19,6 +20,10 @@ const api = axios.create({
  * @throws {Error} With descriptive message if request fails
  */
 export const fetchUserData = async (username) => {
+  if (!username || typeof username !== 'string') {
+    throw new Error('Valid username is required');
+  }
+
   try {
     const { data } = await api.get(`/users/${username}`);
     return {
@@ -36,52 +41,60 @@ export const fetchUserData = async (username) => {
     };
   } catch (error) {
     if (error.response) {
-      // Handle GitHub API error responses
-      if (error.response.status === 404) {
-        throw new Error('User not found on GitHub');
+      switch (error.response.status) {
+        case 404:
+          throw new Error('User not found on GitHub');
+        case 403:
+          throw new Error('API rate limit exceeded. Try again later.');
+        case 401:
+          throw new Error('Authentication failed');
+        default:
+          throw new Error(`GitHub API error: ${error.response.status}`);
       }
-      if (error.response.status === 403) {
-        throw new Error('API rate limit exceeded. Please try again later.');
-      }
+    } else if (error.request) {
+      throw new Error('Network error - failed to reach GitHub API');
+    } else {
+      throw new Error('Request setup error');
     }
-    throw new Error('Failed to fetch user data. Please check your connection.');
   }
 };
 
 /**
- * Searches GitHub users based on multiple criteria
+ * Searches GitHub users with advanced filters
  * @param {Object} params - Search parameters
- * @param {string} [params.username] - Username to search
+ * @param {string} [params.query] - Username search string
  * @param {string} [params.location] - Location filter
  * @param {number} [params.minRepos] - Minimum repositories
- * @param {number} [params.page=1] - Page number for pagination
+ * @param {number} [params.page=1] - Pagination page
  * @param {number} [params.perPage=10] - Results per page
  * @returns {Promise<Object>} { items: Array, total_count: Number }
  * @throws {Error} If search fails
  */
-export const searchUsers = async ({ 
-  username = '', 
-  location = '', 
-  minRepos = 0, 
-  page = 1, 
-  perPage = 10 
+export const searchUsers = async ({
+  query = '',
+  location = '',
+  minRepos = 0,
+  page = 1,
+  perPage = 10
 } = {}) => {
   try {
-    // Build query string from parameters
-    let query = '';
-    if (username) query += `user:${username}`;
-    if (location) query += ` location:${location}`;
-    if (minRepos > 0) query += ` repos:>${minRepos}`;
+    // Build GitHub search query syntax
+    let q = '';
+    if (query) q += `${query} in:login`;
+    if (location) q += ` location:${location}`;
+    if (minRepos > 0) q += ` repos:>${minRepos}`;
     
-    if (!query.trim()) {
+    if (!q.trim()) {
       throw new Error('At least one search parameter is required');
     }
 
     const { data } = await api.get('/search/users', {
       params: {
-        q: query,
+        q,
         page,
-        per_page: perPage
+        per_page: perPage,
+        sort: 'joined',
+        order: 'desc'
       }
     });
 
@@ -93,26 +106,9 @@ export const searchUsers = async ({
     };
   } catch (error) {
     if (error.response?.status === 403) {
-      throw new Error('API rate limit exceeded. Please try again later.');
+      throw new Error('API rate limit exceeded. Try again later.');
     }
     throw new Error(error.message || 'Failed to search users');
-  }
-};
-
-/**
- * Fetches detailed data for multiple GitHub users in parallel
- * @param {Array<string>} usernames - Array of GitHub usernames
- * @returns {Promise<Array<Object>>} Array of user objects
- */
-export const fetchMultipleUsers = async (usernames) => {
-  try {
-    const requests = usernames.map(username => 
-      fetchUserData(username).catch(() => null) // Skip failed requests
-    );
-    const results = await Promise.all(requests);
-    return results.filter(user => user !== null); // Filter out failed requests
-  } catch (error) {
-    throw new Error('Failed to fetch multiple users: ' + error.message);
   }
 };
 
@@ -120,11 +116,15 @@ export const fetchMultipleUsers = async (usernames) => {
  * Gets GitHub API rate limit status
  * @returns {Promise<Object>} Rate limit information
  */
-export const getRateLimit = async () => {
+export const checkRateLimit = async () => {
   try {
     const { data } = await api.get('/rate_limit');
-    return data.resources.core;
+    return {
+      limit: data.resources.core.limit,
+      remaining: data.resources.core.remaining,
+      reset: new Date(data.resources.core.reset * 1000)
+    };
   } catch (error) {
-    throw new Error('Failed to get rate limit info');
+    throw new Error('Failed to check rate limit');
   }
 };
