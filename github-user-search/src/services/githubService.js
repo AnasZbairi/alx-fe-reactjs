@@ -7,8 +7,7 @@ const GITHUB_API_URL = 'https://api.github.com';
 const api = axios.create({
   baseURL: GITHUB_API_URL,
   headers: {
-    'Accept': 'application/vnd.github.v3+json',
-    'Authorization': '' // Add token here if needed for higher rate limits
+    'Accept': 'application/vnd.github.v3+json'
   },
   timeout: 8000 // 8 seconds timeout
 });
@@ -60,9 +59,9 @@ export const fetchUserData = async (username) => {
 };
 
 /**
- * Searches GitHub users with advanced filters
+ * Searches GitHub users using the search endpoint
  * @param {Object} params - Search parameters
- * @param {string} [params.query] - Username search string
+ * @param {string} [params.username] - Username to search
  * @param {string} [params.location] - Location filter
  * @param {number} [params.minRepos] - Minimum repositories
  * @param {number} [params.page=1] - Pagination page
@@ -71,32 +70,27 @@ export const fetchUserData = async (username) => {
  * @throws {Error} If search fails
  */
 export const searchUsers = async ({
-  query = '',
+  username = '',
   location = '',
   minRepos = 0,
   page = 1,
   perPage = 10
 } = {}) => {
   try {
-    // Build GitHub search query syntax
-    let q = '';
-    if (query) q += `${query} in:login`;
-    if (location) q += ` location:${location}`;
-    if (minRepos > 0) q += ` repos:>${minRepos}`;
+    // Build the search query
+    let queryParts = [];
+    if (username) queryParts.push(`${username} in:login`);
+    if (location) queryParts.push(`location:${location}`);
+    if (minRepos > 0) queryParts.push(`repos:>${minRepos}`);
     
-    if (!q.trim()) {
+    if (queryParts.length === 0) {
       throw new Error('At least one search parameter is required');
     }
 
-    const { data } = await api.get('/search/users', {
-      params: {
-        q,
-        page,
-        per_page: perPage,
-        sort: 'joined',
-        order: 'desc'
-      }
-    });
+    const queryString = queryParts.join('+');
+    const searchUrl = `/search/users?q=${queryString}&page=${page}&per_page=${perPage}`;
+
+    const { data } = await api.get(searchUrl);
 
     return {
       items: data.items,
