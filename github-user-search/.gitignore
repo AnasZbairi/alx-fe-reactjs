@@ -1,4 +1,5 @@
-node_modules
+# Environment files
 .env
-.DS_Store
-dist
+.env.local
+.env.development
+.env.production
