@@ -11,32 +11,44 @@ const api = axios.create({
 });
 
 /**
- * Search GitHub users using the exact required endpoint format
- * @param {string} query - Search query string
- * @param {number} [page=1] - Page number
- * @param {number} [perPage=10] - Results per page
+ * Search GitHub users with advanced filters including minRepos
+ * @param {Object} params - Search parameters
+ * @param {string} [params.username] - Username to search
+ * @param {string} [params.location] - Location filter
+ * @param {number} [params.minRepos] - Minimum repositories filter
+ * @param {number} [params.page=1] - Page number
+ * @param {number} [params.perPage=10] - Results per page
  * @returns {Promise<Object>} Search results
  */
-export const searchUsers = async (query, page = 1, perPage = 10) => {
-  if (!query || typeof query !== 'string') {
-    throw new Error('Valid search query is required');
-  }
-
+export const searchUsers = async ({
+  username = '',
+  location = '',
+  minRepos = 0,
+  page = 1,
+  perPage = 10
+} = {}) => {
   try {
-    // Explicitly construct the exact required endpoint URL
-    const searchUrl = `https://api.github.com/search/users?q=${encodeURIComponent(query)}&page=${page}&per_page=${perPage}`;
+    // Build query components
+    let queryParts = [];
+    if (username) queryParts.push(`${username} in:login`);
+    if (location) queryParts.push(`location:${location}`);
+    if (minRepos > 0) queryParts.push(`repos:>${minRepos}`);
     
-    const { data } = await axios.get(searchUrl, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
+    if (queryParts.length === 0) {
+      throw new Error('At least one search parameter is required');
+    }
+
+    const queryString = queryParts.join('+');
+    const searchUrl = `/search/users?q=${queryString}&page=${page}&per_page=${perPage}`;
+
+    const { data } = await api.get(searchUrl);
 
     return {
       items: data.items,
       total_count: data.total_count,
       page,
-      perPage
+      perPage,
+      minRepos // Include minRepos in the return object if needed
     };
   } catch (error) {
     if (error.response?.status === 403) {
@@ -62,7 +74,7 @@ export const fetchUserData = async (username) => {
       html_url: data.html_url,
       bio: data.bio,
       location: data.location,
-      public_repos: data.public_repos,
+      public_repos: data.public_repos, // Includes repository count
       followers: data.followers,
       following: data.following,
       created_at: data.created_at
