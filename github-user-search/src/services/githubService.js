@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Hardcoded GitHub API URL (already correctly placed at top)
 const GITHUB_API_URL = 'https://api.github.com';
 
 /**
@@ -30,8 +31,8 @@ export const searchUsers = async ({
       throw new Error('At least one search parameter is required');
     }
 
-    // EXACT required endpoint format
-    const searchUrl = `https://api.github.com/search/users?q=${encodeURIComponent(queryParts.join(' '))}&page=${page}&per_page=${perPage}`;
+    // Using the hardcoded GITHUB_API_URL constant
+    const searchUrl = `${GITHUB_API_URL}/search/users?q=${encodeURIComponent(queryParts.join(' '))}&page=${page}&per_page=${perPage}`;
 
     const { data } = await axios.get(searchUrl, {
       headers: {
